@@ -24,52 +24,134 @@ namespace IngameScript
     {
         public class Airlock
         {
-            private readonly MyGridProgram Grid;
-            public readonly IMyDoor InnerDoor;
-            public readonly IMyDoor OuterDoor;
-            public readonly IMyAirVent Vent;
-            public readonly IList<IMyButtonPanel> Buttons;  
+            private static readonly Color PressurizedColor = new Color(255, 255, 220);
+            private static readonly Color DepressurizedColor = new Color(220, 0, 0);
+            private const string ConfigSectionName = "Airlock";
 
-            public Airlock(MyGridProgram grid, string prefix)
+            private readonly MyGridProgram Grid;
+            private readonly MyIni Config;
+            private readonly string LcdTag;
+            public readonly List<IMyDoor> Doors;
+            public readonly IMyAirVent Vent;
+            public readonly List<IMyButtonPanel> Buttons;
+            public readonly List<IMyLightingBlock> Lights;
+
+            public Airlock(MyGridProgram grid, string prefix, MyIni config)
             {
                 Grid = grid;
-                InnerDoor = Grid.GetBlock<IMyDoor>(prefix + " Inner Door");
-                OuterDoor = Grid.GetBlock<IMyDoor>(prefix + " Outer Door");
-                Vent = Grid.GetBlock<IMyAirVent>(prefix + " Vent");
-                Buttons = Grid.GetBlocks<IMyButtonPanel>(prefix);
+                Config = config;
+                Doors = Grid.GetBlocks<IMyDoor>(prefix + " Airlock Inner Door");
+                Doors.AddRange(Grid.GetBlocks<IMyDoor>(prefix + " Airlock Outer Door"));
+                Vent = Grid.GetBlock<IMyAirVent>(prefix + " Airlock Vent");
+                Buttons = Grid.FindBlocks<IMyButtonPanel>(prefix);
+                Lights = new List<IMyLightingBlock>();
+                Grid.GridTerminalSystem.GetBlocksOfType(Lights, b => b.CustomName.StartsWith(prefix + " Airlock Light"));
+                Name = prefix.IndexOf(" ") == 2 ? prefix.Substring(3) : prefix;
+                LcdTag = Config.Get(ConfigSectionName, "LcdTag").ToString("[LCD]");
+
+                Configure();
             }
 
             public bool Enabled => Vent.Enabled;
             public string Name { get; set; }
-            public bool IsClosed => !Enabled || (
-                InnerDoor.Status == DoorStatus.Closed && 
-                OuterDoor.Status == DoorStatus.Closed);
+            public bool IsClosed => !Enabled || (Doors.All(d => d.Status == DoorStatus.Closed));
             public bool IsAtPressure => !Enabled || (
-                Vent.Status == VentStatus.Depressurized || Vent.Status == VentStatus.Pressurized);
-            public bool IsPressurizing => Vent.Enabled && (
-                Vent.Status == VentStatus.Pressurizing || Vent.Status == VentStatus.Pressurizing);
+                Vent.Status == VentStatus.Depressurized || Vent.Status == VentStatus.Pressurized ||
+                (Vent.Depressurize && Vent.GetOxygenLevel() < 0.01f));
+            public bool IsPressurizing => Vent.Enabled && Vent.Status == VentStatus.Pressurizing;
+            public bool Depressurize => Vent.Enabled && Vent.Depressurize;
+            public IMyDoor EntryDoor => Doors.Count == 2
+                ? Doors.FirstOrDefault(d => d.Status == DoorStatus.Open || d.Status == DoorStatus.Opening)
+                : null;
 
             public void Close()
             {
-                if (Enabled)
+                Doors.ForEach(d => d.CloseDoor());
+            }
+
+            private void Configure()
+            {
+                string innerVentName = this.Config.Get(ConfigSectionName, "InnerVent").ToString();
+                string outerVentName = this.Config.Get(ConfigSectionName, "OuterVent").ToString();
+                foreach (var button in this.Buttons)
                 {
-                    InnerDoor.CloseDoor();
-                    OuterDoor.CloseDoor();
+
+                    var sb = new StringBuilder();
+                    var provider = (button as IMyTextSurfaceProvider);
+                    int surfaceNumber = 0;
+
+                    if (!string.IsNullOrWhiteSpace(button.CustomData))
+                        continue;
+
+                    var buttonConfig = new MyIni();
+                    buttonConfig.TryParse(button.CustomData);
+                    if (provider != null && provider.SurfaceCount > 1)
+                    {
+                        surfaceNumber = buttonConfig.Get(ConfigSectionName, $"{this.Name}Button").ToInt32(0);
+                        sb.AppendLine($"@{surfaceNumber} AutoLCD");
+                    }
+
+                    sb.AppendLine($"Center <<< {this.Name} Airlock >>>");
+                    sb.AppendLine($"Oxygen {{{this.Vent.CustomName}}}");
+                    this.Doors.ForEach(d =>
+                    {
+                        sb.AppendLine($"Working {{{d.CustomName}}}");
+                    });
+                    sb.AppendLine("Echo");
+
+                    bool workingAdded = false;
+                    if (!string.IsNullOrWhiteSpace(innerVentName) && !button.CustomName.Contains("Inner"))
+                    {
+                        sb.AppendLine($"Oxygen {{{ innerVentName }}}");
+                        workingAdded = true;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(outerVentName) && !button.CustomName.Contains("Outer"))
+                    {
+                        sb.AppendLine($"Oxygen {{{ outerVentName }}}");
+                        workingAdded = true;
+                    }
+
+                    if (workingAdded)
+                    {
+                        sb.AppendLine("Echo");
+                    }
+                    sb.AppendLine("Tanks {Oxygen Tank} Oxygen");
+                    buttonConfig.EndContent = sb.ToString();
+                    button.CustomData = buttonConfig.ToString();
+
+                    if (!button.CustomName.Contains(LcdTag))
+                    {
+                        button.CustomName = button.CustomName.Replace("[LCD]", "").TrimEnd() + " " + LcdTag;
+                    }
+
+                    if (provider != null)
+                    {
+                        var textSurface = (button as IMyTextSurfaceProvider).GetSurface(surfaceNumber);
+                        textSurface.ContentType = ContentType.TEXT_AND_IMAGE;
+                        textSurface.BackgroundColor = Constants.Colors.SurfaceBackground;
+                        textSurface.Alignment = TextAlignment.LEFT;
+                        textSurface.FontSize = 1f;
+                        textSurface.TextPadding = 2f;
+                    }
                 }
             }
 
-            public void TogglePressure()
+            public void TogglePressure(bool pressurize)
             {
                 if (Enabled)
                 {
-                    Vent.Depressurize = !Vent.Depressurize;
+                    Vent.Depressurize = !pressurize;
+                    foreach (var light in Lights)
+                    {
+                        light.Color = pressurize ? PressurizedColor : DepressurizedColor;
+                    }
                 }
             }
 
             public void Activate()
             {
-                InnerDoor.Enabled = true;
-                OuterDoor.Enabled = true;
+                Doors.ForEach(d => d.Enabled = true);
                 Vent.Enabled = true;
                 foreach (var b in Buttons)
                 {

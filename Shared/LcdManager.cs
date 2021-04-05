@@ -41,6 +41,18 @@ namespace IngameScript
                 Surfaces.Add(surface);
             }
 
+            public void AddTextSurfaces(string name)
+            {
+                var blocks = Grid.GetBlocks<IMyTerminalBlock>(name);
+                foreach (var block in blocks)
+                {
+                    if (block is IMyTextSurface)
+                    {
+                        Add((IMyTextSurface)block);
+                    }
+                }
+            }
+
             public void Clear()
             {
                 foreach (var s in Surfaces)

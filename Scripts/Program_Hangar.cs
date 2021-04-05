@@ -27,42 +27,33 @@ namespace IngameScript
         readonly Color LightNormalColor = new Color(255, 255, 220);
         readonly Color LightDangerColor = new Color(151, 0, 0);
 
-        private readonly MyIni Config = new MyIni();
-        private bool Initialized = false;
         private IList<IMyDoor> HangarDoors;
         private IList<IMyAirVent> HangarAirVents;
         private IList<IMyInteriorLight> HangarLights;
         private IMyAirVent Vent;
-        private readonly LcdManager Output;
-        private IEnumerator<UpdateFrequency> InitOperation;
-        private IEnumerator<UpdateFrequency> HangarDoorOperation;
 
-        public Program()
-        {
-            Echo = this.InitDebug();
-            Output = new LcdManager(this, Me, 0);
-            Runtime.UpdateFrequency = UpdateFrequency.Once;
-        }
-
-        private IEnumerator<UpdateFrequency> Init()
+        private IEnumerator<UpdateFrequency> Initialize()
         {
             if (Initialized) yield break;
 
+            Output.AddTextSurfaces("Hangar Control");
             Output.WriteTitle("Hangar Control");
             this.InitConfiguration(Config);
             yield return UpdateFrequency.Once;
 
-            string prefix = Config.Get(ConfigSectionName, "prefix").ToString();
-            HangarDoors = this.GetBlocks<IMyDoor>($"{prefix} Hangar Door");
+            HangarDoors = this.GetGroupBlocks<IMyDoor>(
+                Config.Get(ConfigSectionName, "HangarDoorGroup").ToString());
             Output.Write($"Found {HangarDoors.Count} hangar doors.");
             yield return UpdateFrequency.Once;
 
-            HangarAirVents = this.GetBlocks<IMyAirVent>($"{prefix} Hangar Air Vent");
+            HangarAirVents = this.GetGroupBlocks<IMyAirVent>(
+                Config.Get(ConfigSectionName, "AirVentGroup").ToString());
             Vent = HangarAirVents[0];
             Output.Write($"Found {HangarAirVents.Count} vents.");
             yield return UpdateFrequency.Once;
             
-            HangarLights = this.GetBlocks<IMyInteriorLight>($"{prefix} Hangar Ceiling Light");
+            HangarLights = this.GetGroupBlocks<IMyInteriorLight>(
+                Config.Get(ConfigSectionName, "InteriorLightGroup").ToString());
             Output.Write($"Found {HangarLights.Count} lights.");
             yield return UpdateFrequency.Once;
 
@@ -71,50 +62,50 @@ namespace IngameScript
 
         private void ToggleHangarDoors()
         {
-            if (HangarDoors.Any(hd => hd.Status == DoorStatus.Open || hd.Status == DoorStatus.Opening))
-            {
-                HangarDoorOperation?.Dispose();
-                HangarDoorOperation = CloseHangarDoors();
-            }
-            else
-            {
-                HangarDoorOperation?.Dispose();
-                HangarDoorOperation = OpenHangarDoors();
-            }
+            //if (HangarDoors.Any(hd => hd.Status == DoorStatus.Open || hd.Status == DoorStatus.Opening))
+            //{
+            //    HangarDoorOperation?.Dispose();
+            //    HangarDoorOperation = CloseHangarDoors();
+            //}
+            //else
+            //{
+            //    HangarDoorOperation?.Dispose();
+            //    HangarDoorOperation = OpenHangarDoors();
+            //}
         }
 
-        public void Main(string argument, UpdateType updateSource)
-        {
-            Runtime.UpdateFrequency = UpdateFrequency.None;
-            try
-            {
-                if (Initialized && this.IsCommand(updateSource))
-                {
-                    switch (argument) 
-                    {
-                        case "openclose":
-                            ToggleHangarDoors();
-                            break;
+        //public void Main(string argument, UpdateType updateSource)
+        //{
+        //    Runtime.UpdateFrequency = UpdateFrequency.None;
+        //    try
+        //    {
+        //        if (Initialized && this.IsCommand(updateSource))
+        //        {
+        //            switch (argument) 
+        //            {
+        //                case "openclose":
+        //                    ToggleHangarDoors();
+        //                    break;
 
-                        default:
-                            Echo($"Unrecognized command: {argument}");
-                            break;
-                    }
-                }
-                else if (!Initialized && InitOperation == null)
-                {
-                    InitOperation = Init();
-                }
+        //                default:
+        //                    Echo($"Unrecognized command: {argument}");
+        //                    break;
+        //            }
+        //        }
+        //        else if (!Initialized && InitOperation == null)
+        //        {
+        //            InitOperation = Init();
+        //        }
 
-                HangarDoorOperation = this.RunOperation(HangarDoorOperation);
-                InitOperation = this.RunOperation(InitOperation);
-            }
-            catch (Exception ex)
-            {
-                Echo(ex.ToString());
-                throw;
-            }
-        }
+        //        HangarDoorOperation = this.RunOperation(HangarDoorOperation);
+        //        InitOperation = this.RunOperation(InitOperation);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Echo(ex.ToString());
+        //        throw;
+        //    }
+        //}
 
         private IEnumerator<UpdateFrequency> CloseHangarDoors()
         {

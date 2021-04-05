@@ -17,6 +17,7 @@ using VRage.Game;
 using VRage;
 using VRageMath;
 using System.Diagnostics;
+using System.Net;
 
 namespace IngameScript
 {
@@ -46,22 +47,95 @@ namespace IngameScript
             return (T)block;
         }
 
-        public static IList<T> GetBlocks<T>(this MyGridProgram grid, string name) where T : class, IMyTerminalBlock
+        public static List<T> GetBlocks<T>(this MyGridProgram grid, string name) where T : class, IMyTerminalBlock
         {
             var blocks = new List<IMyTerminalBlock>();
             grid.GridTerminalSystem.SearchBlocksOfName(name, blocks, b => b is T);
             if (blocks.Count == 0)
             {
-                throw new Exception($"No blocks found with name '{name}' of type '{typeof(T).Name}'");
+                throw new Exception($"No blocks found with name '{name}' of type '{typeof(T).Name}'.");
             }
 
             return blocks.Cast<T>().ToList();
         }
 
+        public static List<T> GetBlocksOfType<T>(this MyGridProgram grid,
+            Func<T, bool> predicate = null, bool required = false) where T : class, IMyTerminalBlock
+        {
+            var blocks = new List<IMyTerminalBlock>();
+            grid.GridTerminalSystem.GetBlocksOfType<T>(blocks, b => predicate == null || predicate((T)b));
+            if (required && blocks.Count == 0)
+            {
+                throw new Exception($"No blocks found of type '{typeof(T).Name}'.");
+            }
+
+            return blocks.Cast<T>().ToList();
+        }
+
+        public static List<IMyInventory> GetInventories(this MyGridProgram grid)
+        {
+            var blocks = new List<IMyTerminalBlock>();
+            grid.GridTerminalSystem.GetBlocks(blocks);
+            var inventories = new List<IMyInventory>();
+            foreach (var block in blocks)
+            {
+                if (block.HasInventory)
+                {
+                    for (int i = 0; i < block.InventoryCount; i++)
+                    {
+                        inventories.Add(block.GetInventory(i));
+                    }
+                }
+            }
+
+            return inventories;
+        }
+
+        public static List<MyInventoryItem> GetInventoryItems(this MyGridProgram grid, IEnumerable<IMyInventory> inventories, string typeId, string subtypeId)
+        {
+            var items = new List<MyInventoryItem>();
+            foreach (var inventory in inventories)
+            {
+                inventory.GetItems(items, i => i.Type.TypeId == typeId && i.Type.SubtypeId == subtypeId);
+            }
+            return items;
+        }
+
+        public static List<T> FindBlocks<T>(this MyGridProgram grid, string name) where T : class, IMyTerminalBlock
+        {
+            var blocks = new List<IMyTerminalBlock>();
+            grid.GridTerminalSystem.SearchBlocksOfName(name, blocks, b => b is T);
+
+            return blocks.OfType<T>().ToList();
+        }
+
+        public static List<T> GetGroupBlocks<T>(this MyGridProgram grid, string groupName) where T : class, IMyTerminalBlock
+        {
+            var group = grid.GridTerminalSystem.GetBlockGroupWithName(groupName);
+            if (group == null)
+            {
+                throw new Exception($"No group found with name '{groupName}'.");
+            }
+
+            var blocks = new List<T>();
+            group.GetBlocksOfType(blocks);
+            if (blocks.Count == 0)
+            {
+                throw new Exception($"The group '{groupName}' does not contain any blocks of type '{typeof(T).Name}'.");
+            }
+
+            return blocks;
+        }
+
         public static void InitConfiguration(this MyGridProgram grid, MyIni configuration)
         {
+            InitConfiguration(grid.Me.CustomData, configuration);
+        }
+
+        public static void InitConfiguration(string customData, MyIni configuration)
+        {
             MyIniParseResult config;
-            if (!configuration.TryParse(grid.Me.CustomData, out config))
+            if (!configuration.TryParse(customData, out config))
             {
                 throw new Exception(config.ToString());
             }

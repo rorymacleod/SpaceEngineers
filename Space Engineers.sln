@@ -11,11 +11,14 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "Shared\Shared.shp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drill Control", "Drill Control\Drill Control.csproj", "{46E879F9-F333-4955-9B38-46FFB863F0E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gun Battery Control", "Gun Battery Control\Gun Battery Control.csproj", "{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Shared\Shared.projitems*{2a984b31-57a8-48c1-a5f3-7e9aea1da2bd}*SharedItemsImports = 4
 		Shared\Shared.projitems*{36e7cdd6-ba1e-4255-9c58-1af11538b628}*SharedItemsImports = 13
 		Shared\Shared.projitems*{46e879f9-f333-4955-9b38-46ffb863f0e4}*SharedItemsImports = 4
+		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
 		Shared\Shared.projitems*{ce1af11a-1204-41ce-a072-26096c5ae632}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +31,8 @@ Global
 		{2A984B31-57A8-48C1-A5F3-7E9AEA1DA2BD}.Debug|x64.Build.0 = Debug|x64
 		{46E879F9-F333-4955-9B38-46FFB863F0E4}.Debug|x64.ActiveCfg = Debug|x64
 		{46E879F9-F333-4955-9B38-46FFB863F0E4}.Debug|x64.Build.0 = Debug|x64
+		{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}.Debug|x64.ActiveCfg = Debug|x64
+		{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -25,6 +25,7 @@ namespace IngameScript
         private const string ConfigSectionName = "Drill Control";
         private const float SurfaceLevel = 7.3f;
         private const float SensorMargin = 4.1f;
+        private const decimal MaxCargoFillLevel = 0.95m;
 
         private IList<IMyPistonBase> DrillPistons;
         private IList<IMyShipDrill> Drills;
@@ -34,39 +35,32 @@ namespace IngameScript
         private IMySensorBlock DrillSensor;
         private IMyFunctionalBlock DrillSorter;
         private IList<IMyFunctionalBlock> EjectorBlocks;
+        private IList<IMyCargoContainer> CargoContainers;
         private float DrillingVelocity;
         private float MovementVelocity;
         private float DoorClearanceDistance = 5;
         private float TargetDepth;
         private float DetectedSurface = 0;
-
-        private IEnumerator<UpdateFrequency> DrillOperation;
-        private IEnumerator<UpdateFrequency> InitOperation;
-        private readonly MyIni Config = new MyIni();
-        private readonly LcdManager Output;
-        private bool Initialized = false;
+        private bool Drilling = false;
 
         public Program()
         {
             Echo = this.InitDebug();
-            Output = new LcdManager(this, Me, 0);
             Runtime.UpdateFrequency = UpdateFrequency.Once;
         }
 
-        private IEnumerator<UpdateFrequency> Init()
+        private IEnumerator<UpdateFrequency> Initialize()
         {
             if (Initialized) yield break;
-
-            this.InitConfiguration(Config);
-            string prefix = Config.Get(ConfigSectionName, "prefix").ToString();
-            var drillLcds = this.GetBlocks<IMyTextPanel>($"{prefix} Drill Control LCD");
-            foreach (var lcd in drillLcds)
+            foreach (var update in Enumerate(InitializeCommon()))
             {
-                Output.Add(lcd);
+                yield return update;
             }
 
+            string prefix = Config.Get(ConfigSectionName, "Prefix").ToString();
+            Output.AddTextSurfaces("Drill Control");
             Output.WriteTitle("Drill Control");
-            Output.Write($"Found {drillLcds.Count} output text panels.");
+            Output.Write($"Found {Output.Surfaces.Count - 1} output text panels.");
             yield return UpdateFrequency.Once;
 
             Drills = this.GetBlocks<IMyShipDrill>($"{prefix} Drill");
@@ -89,28 +83,33 @@ namespace IngameScript
             Output.Write($"Found {EjectorBlocks.Count} ejector system blocks.");
             yield return UpdateFrequency.Once;
 
+            CargoContainers = this.GetBlocks<IMyCargoContainer>(
+                Config.Get(ConfigSectionName, "CargoContainerName").ToString());
+            Output.Write($"Found {CargoContainers.Count} cargo containers.");
+            yield return UpdateFrequency.Once;
+
             if (!string.IsNullOrEmpty(Storage))
             {
                 var data = new MyIni();
                 data.TryParse(Storage);
-                DetectedSurface = (float)data.Get(ConfigSectionName, "detectedSurface").ToDecimal();
+                DetectedSurface = (float)data.Get(ConfigSectionName, "DetectedSurface").ToDecimal();
                 Output.Write($"Detected surface level: {Math.Round(DetectedSurface, 1)}m.");
             }
 
             DrillDockingGear = this.GetBlock<IMyLandingGear>($"{prefix} Drill Docking Gear");
             DrillSensor = this.GetBlock<IMySensorBlock>($"{prefix} Drill Position Sensor");
             DrillSorter = this.GetBlock<IMyFunctionalBlock>($"{prefix} Drill Output Sorter");
-            TargetDepth = (float)Config.Get(ConfigSectionName, "targetDepth").ToDecimal(20);
+            TargetDepth = (float)Config.Get(ConfigSectionName, "TargetDepth").ToDecimal(20);
             Output.Write($"Target depth: {TargetDepth}m");
-            DrillingVelocity = (float)Config.Get(ConfigSectionName, "drillingVelocity").ToDecimal(0.03m);
-            MovementVelocity = (float)Config.Get(ConfigSectionName, "movementVelocity").ToDecimal(0.5m);
+            DrillingVelocity = (float)Config.Get(ConfigSectionName, "DrillingVelocity").ToDecimal(0.03m);
+            MovementVelocity = (float)Config.Get(ConfigSectionName, "MovementVelocity").ToDecimal(0.5m);
             Initialized = true;
         }
 
         private IEnumerator<UpdateFrequency> StartDrill()
         {
             this.InitConfiguration(Config);
-            TargetDepth = (float)Config.Get(ConfigSectionName, "targetDepth").ToDecimal(20);
+            TargetDepth = (float)Config.Get(ConfigSectionName, "TargetDepth").ToDecimal(20);
             yield return UpdateFrequency.Once;
 
             this.Each(DrillLights, l => l.Enabled = true);            
@@ -149,7 +148,7 @@ namespace IngameScript
                     yield return UpdateFrequency.Update100;
                 }
 
-                Output.Write("In position.");
+                Output.Write($"Moving to surface level {SurfaceLevel}m...");
             }
 
             this.Each(Drills, d => d.Enabled = true);
@@ -162,7 +161,7 @@ namespace IngameScript
             SetDrillDepth((DetectedSurface == 0 ? SurfaceLevel : DetectedSurface) + TargetDepth);
             this.Each(DrillPistons, p =>
             {
-                p.Velocity = DrillingVelocity / DrillPistons.Count;
+                p.Velocity = MovementVelocity / DrillPistons.Count;
                 p.Enabled = true;
             });
             DrillSensor.Enabled = true;
@@ -178,6 +177,14 @@ namespace IngameScript
                 DetectedSurface = currentDepth;
                 SetDrillDepth(DetectedSurface + TargetDepth);
             }
+
+            this.Each(DrillPistons, p =>
+            {
+                p.Velocity = DrillingVelocity / DrillPistons.Count;
+                p.Enabled = true;
+            });
+
+            Drilling = true;
         }
 
         private IEnumerator<UpdateFrequency> StopDrill() 
@@ -186,6 +193,23 @@ namespace IngameScript
             this.Each(Drills, d => d.Enabled = false);
             DrillSensor.Enabled = false;
             Output.Write($"Drilling stopped at {Math.Round(DrillPistons.Sum(p => p.CurrentPosition), 1)}m.");
+            Drilling = false;
+            yield break;
+        }
+
+        private IEnumerator<UpdateFrequency> PauseForCapacity()
+        {
+            this.Each(DrillPistons, p => p.Enabled = false);
+            this.Each(Drills, d => d.Enabled = false);
+            DrillSensor.Enabled = false;
+            Output.Write($"Drilling paused at {Math.Round(DrillPistons.Sum(p => p.CurrentPosition), 1)}m.");
+
+            while (GetCargoFillLevel() >= MaxCargoFillLevel - 10)
+            {
+                yield return UpdateFrequency.Update100;
+            }
+
+            //DrillOperation = StartDrill();
             yield break;
         }
 
@@ -246,56 +270,45 @@ namespace IngameScript
             DrillSensor.BottomExtend = (target / DrillPistons.Count) + SensorMargin;
         }
 
+        private decimal GetCargoFillLevel()
+        {
+            var fillLevel = CargoContainers
+               .Select(cc => cc.GetInventory())
+               .Average(i => i.CurrentVolume.RawValue / (decimal)i.MaxVolume.RawValue);
+            return fillLevel;
+        }
+
+        private bool CheckCargoCapacity()
+        {
+            if (GetCargoFillLevel() >= MaxCargoFillLevel)
+            {
+                Output.Write($"Cargo fill level at {Math.Round(MaxCargoFillLevel * 100)}%.");
+                return false;
+            }
+            return true;
+        }
+
         public void Save()
         {
             var data = new MyIni();
-            data.Set(ConfigSectionName, "detectedSurface", DetectedSurface);
+            data.Set(ConfigSectionName, "DetectedSurface", DetectedSurface);
             Storage = data.ToString();
         }
 
-        public void Main(string argument, UpdateType updateSource)
-        {
-            Runtime.UpdateFrequency = UpdateFrequency.None;
-            try
-            {
-                if (Initialized && this.IsCommand(updateSource))
-                {
-                    switch (argument)
-                    {
-                        case "start":
-                            DrillOperation?.Dispose();
-                            DrillOperation = StartDrill();
-                            break;
-
-                        case "sensor":
-                        case "stop":
-                            DrillOperation?.Dispose();
-                            DrillOperation = StopDrill();
-                            break;
-
-                        case "return":
-                            DrillOperation?.Dispose();
-                            DrillOperation = ReturnDrill();
-                            break;
-
-                        default:
-                            Echo($"Unrecognized command: {argument}");
-                            break;
-                    }
-                }
-                else if (!Initialized && InitOperation == null)
-                {
-                    InitOperation = Init();
-                }
-
-                DrillOperation = this.RunOperation(DrillOperation);
-                InitOperation = this.RunOperation(InitOperation);
-            }
-            catch (Exception ex)
-            {
-                Echo(ex.ToString());
-                throw;
-            }
-        }
+        //public void Main(string argument, UpdateType updateSource)
+        //{
+        //    if (DrillOperation == null && Drilling)
+        //    {
+        //        if (CheckCargoCapacity())
+        //        {
+        //            Runtime.UpdateFrequency = Runtime.UpdateFrequency | UpdateFrequency.Update100;
+        //        }
+        //        else
+        //        {
+        //            DrillOperation = PauseForCapacity();
+        //            Runtime.UpdateFrequency = Runtime.UpdateFrequency | UpdateFrequency.Once;
+        //        }
+        //    }
+        //}
     }
 }
