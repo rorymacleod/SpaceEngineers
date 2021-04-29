@@ -43,7 +43,6 @@ namespace IngameScript
 
             Output.AddTextSurfaces("Airlock Control");
             Output.WriteTitle("Airlock Control");
-            this.InitConfiguration(Config);
             yield return UpdateFrequency.Once;
 
 

@@ -72,10 +72,8 @@ namespace IngameScript
             return blocks.Cast<T>().ToList();
         }
 
-        public static List<IMyInventory> GetInventories(this MyGridProgram grid)
+        public static List<IMyInventory> GetInventories(this MyGridProgram grid, IEnumerable<IMyTerminalBlock> blocks)
         {
-            var blocks = new List<IMyTerminalBlock>();
-            grid.GridTerminalSystem.GetBlocks(blocks);
             var inventories = new List<IMyInventory>();
             foreach (var block in blocks)
             {

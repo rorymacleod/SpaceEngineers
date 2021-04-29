@@ -12,6 +12,7 @@ namespace IngameScript
     {
         private Dictionary<string, Func<IEnumerator<UpdateFrequency>>> Commands { get; set; } =
             new Dictionary<string, Func<IEnumerator<UpdateFrequency>>>();
+        private string AutoRunCommand = null;
         private readonly MyIni Config = new MyIni();
         private bool Initialized = false;
         private IEnumerator<UpdateFrequency> Operation;
@@ -49,6 +50,20 @@ namespace IngameScript
             }
         }
 
+        private void RunCommand(string command)
+        {
+            Func<IEnumerator<UpdateFrequency>> handlerFactory;
+            if (Commands.TryGetValue(command, out handlerFactory))
+            {
+                Operation?.Dispose();
+                Operation = handlerFactory();
+            }
+            else
+            {
+                Echo($"Unrecognized command: {command}");
+            }
+        }
+
         public void Main(string argument, UpdateType updateSource)
         {
             Runtime.UpdateFrequency = UpdateFrequency.None;
@@ -56,16 +71,11 @@ namespace IngameScript
             {
                 if (Initialized && this.IsCommand(updateSource))
                 {
-                    Func<IEnumerator<UpdateFrequency>> handlerFactory;
-                    if (Commands.TryGetValue(argument.ToLower(), out handlerFactory))
-                    {
-                        Operation?.Dispose();
-                        Operation = handlerFactory();
-                    }
-                    else
-                    {
-                        Echo($"Unrecognized command: {argument}");
-                    }
+                    RunCommand(argument.ToLower());
+                }
+                else if (Initialized && Operation == null && AutoRunCommand != null)
+                {
+                    RunCommand(AutoRunCommand);
                 }
                 else if (!Initialized && Operation == null)
                 {
