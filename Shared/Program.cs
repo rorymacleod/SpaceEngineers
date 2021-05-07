@@ -10,20 +10,18 @@ namespace IngameScript
 {
     partial class Program
     {
+        public static UpdateFrequency Next() => UpdateFrequency.Update1;
+        public static UpdateFrequency Once() => UpdateFrequency.Once;
+        public static UpdateFrequency Update10() => UpdateFrequency.Update10;
+        public static UpdateFrequency Update100() => UpdateFrequency.Update100;
+
         private Dictionary<string, Func<IEnumerator<UpdateFrequency>>> Commands { get; set; } =
             new Dictionary<string, Func<IEnumerator<UpdateFrequency>>>();
         private string AutoRunCommand = null;
         private readonly MyIni Config = new MyIni();
         private bool Initialized = false;
         private IEnumerator<UpdateFrequency> Operation;
-        private readonly LcdManager Output;
-
-        public Program() : base()
-        {
-            Echo = this.InitDebug();
-            Output = new LcdManager(this, Me, 0);
-            Runtime.UpdateFrequency = UpdateFrequency.Once;
-        }
+        private LcdManager Output;
 
         private IEnumerable<UpdateFrequency> Enumerate(IEnumerator<UpdateFrequency> source)
         {
@@ -33,12 +31,25 @@ namespace IngameScript
             }
         }
 
-        private IEnumerator<UpdateFrequency> InitializeCommon()
+        private IEnumerator<UpdateFrequency> InitializeProgram()
         {
             if (Initialized) yield break;
 
+            Echo = this.InitDebug();
+            Output = new LcdManager(this, Me, 0);
+            Runtime.UpdateFrequency = UpdateFrequency.Update1;
             ReadConfiguration(Me.CustomData, Config);
-            yield return UpdateFrequency.Once;
+            yield return Next();
+
+            if (Commands.ContainsKey("initialize"))
+            {
+                foreach (var update in Enumerate(Commands["initialize"]()))
+                {
+                    yield return update;
+                }
+            }
+
+            Initialized = true;
         }
 
         private void ReadConfiguration(string customData, MyIni configuration)
@@ -79,7 +90,7 @@ namespace IngameScript
                 }
                 else if (!Initialized && Operation == null)
                 {
-                    Operation = Initialize();
+                    Operation = InitializeProgram();
                 }
 
                 Operation = this.RunOperation(Operation);

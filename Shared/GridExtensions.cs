@@ -72,8 +72,15 @@ namespace IngameScript
             return blocks.Cast<T>().ToList();
         }
 
-        public static List<IMyInventory> GetInventories(this MyGridProgram grid, IEnumerable<IMyTerminalBlock> blocks)
+        public static List<IMyInventory> GetInventories(this MyGridProgram grid, IEnumerable<IMyTerminalBlock> blocks = null)
         {
+            if (blocks == null)
+            {
+                var list = new List<IMyTerminalBlock>();
+                grid.GridTerminalSystem.GetBlocks(list);
+                blocks = list;
+            }
+
             var inventories = new List<IMyInventory>();
             foreach (var block in blocks)
             {
@@ -105,6 +112,17 @@ namespace IngameScript
             grid.GridTerminalSystem.SearchBlocksOfName(name, blocks, b => b is T);
 
             return blocks.OfType<T>().ToList();
+        }
+
+        public static T FindBlock<T>(this MyGridProgram grid, string name) where T : class, IMyTerminalBlock
+        {
+            var list = FindBlocks<T>(grid, name);
+            if (list.Count == 0)
+            {
+                throw new Exception($"No blocks found with name '{name}' of type '{typeof(T).Name}'.");
+            }
+
+            return list[0];
         }
 
         public static List<T> GetGroupBlocks<T>(this MyGridProgram grid, string groupName) where T : class, IMyTerminalBlock

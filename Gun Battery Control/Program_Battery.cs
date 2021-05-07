@@ -2,9 +2,7 @@
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using VRage;
@@ -26,55 +24,51 @@ namespace IngameScript
         private IMyBatteryBlock Battery;
         private List<IMyInventory> Inventories;
 
+        public Program() : base()
+        {
+            Commands.Add("initialize", Initialize);
+            Commands.Add("update", UpdateBatteryStatus);
+        }
+
         private IEnumerator<UpdateFrequency> Initialize()
         {
-            if (Initialized) yield break;
-            foreach (var update in Enumerate(InitializeCommon()))
-            {
-                yield return update;
-            }
-
-            Commands.Add("update", UpdateBatteryStatus);
-
             Output.WriteTitle("Gun Battery Control");
             Beacon = this.GetBlocksOfType<IMyBeacon>(required: true).First();
             Output.Write($"Found beacon {Beacon.CustomName}");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             Battery = this.GetBlocksOfType<IMyBatteryBlock>(required: true).First();
             Output.Write($"Found battery {Battery.CustomName}");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             Guns = this.GetBlocksOfType<IMyLargeGatlingTurret>(required: true);
             Output.Write($"Found {Guns.Count} turrets");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             Lights = this.GetBlocksOfType<IMyInteriorLight>();
             Output.Write($"Found {Lights.Count} lights");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             Inventories = this.GetInventories();
             Output.Write($"Found {Inventories.Count} inventories");
-            
-            Initialized = true;
         }
 
         private IEnumerator<UpdateFrequency> UpdateBatteryStatus()
         {
-            Output.WriteTitle("Update");
+            Output.WriteTitle("Update Status");
             var batteryCharge = Math.Round(Battery.CurrentStoredPower * 100 / Battery.MaxStoredPower, 0);
             Output.Write($"Battery Level: {batteryCharge}%");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             var ammoCount = this.GetInventoryItems(Inventories, "MyObjectBuilder_AmmoMagazine", "NATO_25x184mm").Sum(i => i.Amount.ToIntSafe());
             Output.Write($"Ammo: {ammoCount}");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             var isDamaged = Guns.Any(g => g.DisassembleRatio < 1);
             var isBroken = Guns.Any(g => !g.IsFunctional);
             Output.Write($"Damaged: {isDamaged}");
             Output.Write($"Broken: {isBroken}");
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             string prefix = Beacon.HudText;
             int prefixEnd = prefix.IndexOf(" [");
@@ -106,7 +100,5 @@ namespace IngameScript
                 });
             }
         }
-
-
     }
 }
