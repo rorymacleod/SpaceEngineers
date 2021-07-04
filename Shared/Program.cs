@@ -14,6 +14,18 @@ namespace IngameScript
         public static UpdateFrequency Once() => UpdateFrequency.Once;
         public static UpdateFrequency Update10() => UpdateFrequency.Update10;
         public static UpdateFrequency Update100() => UpdateFrequency.Update100;
+        public static bool FloatEquals(float a, float b, float delta = 0.0001f) => Math.Abs(b - a) < delta;
+
+        public static IEnumerable<UpdateFrequency> Enumerate(params Func<IEnumerable<UpdateFrequency>>[] factories)
+        {
+            foreach (var factory in factories)
+            {
+                foreach (var update in factory())
+                {
+                    yield return update;
+                }
+            }
+        }
 
         private Dictionary<string, Func<IEnumerator<UpdateFrequency>>> Commands { get; set; } =
             new Dictionary<string, Func<IEnumerator<UpdateFrequency>>>();

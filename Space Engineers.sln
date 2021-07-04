@@ -15,14 +15,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gun Battery Control", "Gun 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Container Control", "Container Control\Container Control.csproj", "{8FC94B76-7A90-4A85-8F07-0EE0704CB31D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mining Rig", "Mining Rig\Mining Rig.csproj", "{7AA36394-F172-483E-827B-23C35DA16F13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Shared\Shared.projitems*{2a984b31-57a8-48c1-a5f3-7e9aea1da2bd}*SharedItemsImports = 4
 		Shared\Shared.projitems*{36e7cdd6-ba1e-4255-9c58-1af11538b628}*SharedItemsImports = 13
 		Shared\Shared.projitems*{46e879f9-f333-4955-9b38-46ffb863f0e4}*SharedItemsImports = 4
+		Shared\Shared.projitems*{7aa36394-f172-483e-827b-23c35da16f13}*SharedItemsImports = 4
 		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
-		Shared\Shared.projitems*{8fc94b76-7a90-4a85-8f07-0ee0704cb31d}*SharedItemsImports = 4
-		Shared\Shared.projitems*{ce1af11a-1204-41ce-a072-26096c5ae632}*SharedItemsImports = 4
+		Shared\Shared.projitems*{b388808c-7e6a-48aa-9cd7-fd80f413aebe}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,6 +42,10 @@ Global
 		{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}.Debug|x64.Build.0 = Debug|x64
 		{8FC94B76-7A90-4A85-8F07-0EE0704CB31D}.Debug|x64.ActiveCfg = Debug|x64
 		{8FC94B76-7A90-4A85-8F07-0EE0704CB31D}.Debug|x64.Build.0 = Debug|x64
+		{7AA36394-F172-483E-827B-23C35DA16F13}.Debug|x64.ActiveCfg = Debug|x64
+		{7AA36394-F172-483E-827B-23C35DA16F13}.Debug|x64.Build.0 = Debug|x64
+		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.ActiveCfg = Debug|x64
+		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
