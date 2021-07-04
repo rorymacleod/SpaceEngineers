@@ -9,10 +9,11 @@
     <Import_RootNamespace>Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Airlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ConfigException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ConfigExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DrillActuator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DrillHead.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LcdManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GridExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Program.cs" />
