@@ -189,5 +189,20 @@ namespace IngameScript
 
             return operation;
         }
+
+        public static void SetScriptTitle(this IMyProgrammableBlock block, string title)
+        {
+            var provider = block as IMyTextSurfaceProvider;
+            var main = provider.GetSurface(0);
+            var keyboard = provider.GetSurface(1);
+            main.ContentType = ContentType.TEXT_AND_IMAGE;
+            main.FontColor = new Color(0, 220, 0);
+            keyboard.ContentType = ContentType.TEXT_AND_IMAGE;
+            keyboard.FontColor = main.FontColor;
+            keyboard.FontSize = 5f;
+            keyboard.Alignment = TextAlignment.CENTER;
+            keyboard.TextPadding = 30f;
+            keyboard.WriteText(title);
+        }
     }
 }
