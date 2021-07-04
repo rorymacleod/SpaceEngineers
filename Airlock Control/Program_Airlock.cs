@@ -23,28 +23,23 @@ namespace IngameScript
     {
         private readonly List<Airlock> Airlocks = new List<Airlock>();
 
-        public Program()
+        public Program() : base()
         {
-            Echo = this.InitDebug();
-            Output = new LcdManager(this, Me, 0);
             Runtime.UpdateFrequency = UpdateFrequency.Once;
+            Commands.Add("initialize", Initialize);
+            Commands.Add("close", CloseAirlocks);
+            Commands.Add("cycle", CycleAirlocks);
+            Commands.Add("on", TurnOn);
+            Commands.Add("off", TurnOff);
+            Commands.Add("onoff", TurnOnOff);
         }
 
         private IEnumerator<UpdateFrequency> Initialize()
         {
-            if (Initialized) yield break;
-            foreach (var update in Enumerate(InitializeCommon()))
-            {
-                yield return update;
-            }
-
-            Commands.Add("close", CloseAirlocks);
-            Commands.Add("cycle", CycleAirlocks);
-
+            Me.SetScriptTitle("Airlocks");
             Output.AddTextSurfaces("Airlock Control");
             Output.WriteTitle("Airlock Control");
-            yield return UpdateFrequency.Once;
-
+            yield return Next();
 
             var allVents = this.GetBlocksOfType<IMyAirVent>(v => v.IsSameConstructAs(Me));
             foreach (var vent in allVents)
@@ -64,7 +59,7 @@ namespace IngameScript
                         Output.Write($"Ignore {baseName}");
                     }
 
-                    yield return UpdateFrequency.Once;
+                    yield return Next();
                 }
             }
 
@@ -74,13 +69,15 @@ namespace IngameScript
 
         private IEnumerator<UpdateFrequency> CloseAirlocks()
         {
+            yield return Update100();
+
             Airlocks.ForEach(a => a.Close());
             yield break;
         }
 
         private IEnumerator<UpdateFrequency> CycleAirlocks()
         {
-            Output.WriteTitle("Cycle Airlocks");
+            Output.WriteTitle("Airlock Control: Cycle Airlocks");
             var entryDoors = Airlocks.Select(a => a.EntryDoor).Where(d => d != null).ToList();
             bool? entering = null;
             if (entryDoors.Count > 0)
@@ -96,14 +93,14 @@ namespace IngameScript
             {
                 Output.Write("Entry door not detected.");
             }
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             Output.Write("Closing airlock doors...");
             foreach (var airlock in Airlocks)
             {
                 airlock.Close();
             }
-            yield return UpdateFrequency.Once;
+            yield return Next();
 
             while (Airlocks.Any(a => !a.IsClosed))
             {
@@ -117,7 +114,11 @@ namespace IngameScript
                     "Depressurizing..." :
                     "Pressurizing...");
             }
-            yield return UpdateFrequency.Once;
+            else
+            {
+                Output.Write("All airlock vents are disabled.");
+            }
+            yield return Next();
 
             var pressurize = entering == true || Airlocks.First().Depressurize;
             foreach (var airlock in Airlocks)
@@ -136,13 +137,44 @@ namespace IngameScript
                 if (entryDoors.Any(d => airlock.Doors.Contains(d)))
                 {
                     var oppositeDoor = airlock.Doors.First(d => !entryDoors.Contains(d));
-                    oppositeDoor.OpenDoor();
-                    Output.Write($"Open {oppositeDoor.CustomName}...");
+                    if (airlock.IsInnerDoor(oppositeDoor) && !airlock.IsAtInnerPressure)
+                    {
+                        Output.Write($"Unable to open {oppositeDoor.CustomName}:");
+                        Output.Write("- Airlock is not at inner pressure.");
+                    }
+                    else
+                    {
+                        oppositeDoor.OpenDoor();
+                        Output.Write($"Open {oppositeDoor.CustomName}...");
+                    }
                 }
             }
 
-            yield return UpdateFrequency.Once;
+            yield return Next();
             Output.Write("Done.");
+        }
+
+
+        private IEnumerator<UpdateFrequency> TurnOn()
+        {
+            Output.WriteTitle("Airlock Control: Turn On");
+            Airlocks.ForEach(a => a.Enabled = true);
+            Output.Write("All airlocks enabled.");
+            yield break;
+        }
+
+
+        private IEnumerator<UpdateFrequency> TurnOff()
+        {
+            Output.WriteTitle("Airlock Control: Turn Off");
+            Airlocks.ForEach(a => a.Enabled = false);
+            Output.Write("All airlocks disabled.");
+            yield break;
+        }
+
+        private IEnumerator<UpdateFrequency> TurnOnOff()
+        {
+            return Airlocks.Any(a => a.Enabled) ? TurnOff() : TurnOn();
         }
     }
 }

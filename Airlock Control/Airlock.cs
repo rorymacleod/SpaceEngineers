@@ -33,6 +33,7 @@ namespace IngameScript
             private readonly string LcdTag;
             public readonly List<IMyDoor> Doors;
             public readonly IMyAirVent Vent;
+            public readonly IMyAirVent InnerVent;
             public readonly List<IMyButtonPanel> Buttons;
             public readonly List<IMyLightingBlock> Lights;
 
@@ -47,17 +48,35 @@ namespace IngameScript
                 Lights = new List<IMyLightingBlock>();
                 Grid.GridTerminalSystem.GetBlocksOfType(Lights, b => b.CustomName.StartsWith(prefix + " Airlock Light"));
                 Name = prefix.IndexOf(" ") == 2 ? prefix.Substring(3) : prefix;
-                LcdTag = Config.Get(ConfigSectionName, "LcdTag").ToString("[LCD]");
+                LcdTag = Config.Get(ConfigSectionName, "LCD tag").ToString("[LCD]");
 
                 Configure();
             }
 
-            public bool Enabled => Vent.Enabled;
+            public bool Enabled {
+                get
+                {
+                    return Vent.Enabled;
+                }
+                set
+                {
+                    Vent.Enabled = value;
+                    Doors.ForEach(d => d.Enabled = value);
+                    Buttons.ForEach(d => {
+                        if (d is IMyFunctionalBlock) {
+                            ((IMyFunctionalBlock)d).Enabled = value;
+                        }
+                    });
+                    Lights.ForEach(d => d.Enabled = value);
+                }
+            }
             public string Name { get; set; }
             public bool IsClosed => !Enabled || (Doors.All(d => d.Status == DoorStatus.Closed));
             public bool IsAtPressure => !Enabled || (
                 Vent.Status == VentStatus.Depressurized || Vent.Status == VentStatus.Pressurized ||
                 (Vent.Depressurize && Vent.GetOxygenLevel() < 0.01f));
+            public bool IsAtInnerPressure => IsAtPressure &&
+                (InnerVent == null || InnerVent.Status == Vent.Status);
             public bool IsPressurizing => Vent.Enabled && Vent.Status == VentStatus.Pressurizing;
             public bool Depressurize => Vent.Enabled && Vent.Depressurize;
             public IMyDoor EntryDoor => Doors.Count == 2
@@ -71,9 +90,9 @@ namespace IngameScript
 
             private void Configure()
             {
-                string innerVentName = this.Config.Get(ConfigSectionName, "InnerVent").ToString();
-                string outerVentName = this.Config.Get(ConfigSectionName, "OuterVent").ToString();
-                foreach (var button in this.Buttons)
+                string innerVentName = Config.Get(ConfigSectionName, "Inner vent").ToString();
+                string outerVentName = Config.Get(ConfigSectionName, "Outer vent").ToString();
+                foreach (var button in Buttons)
                 {
 
                     var sb = new StringBuilder();
@@ -87,13 +106,13 @@ namespace IngameScript
                     buttonConfig.TryParse(button.CustomData);
                     if (provider != null && provider.SurfaceCount > 1)
                     {
-                        surfaceNumber = buttonConfig.Get(ConfigSectionName, $"{this.Name}Button").ToInt32(0);
+                        surfaceNumber = buttonConfig.Get(ConfigSectionName, $"Airlock button").ToInt32(0);
                         sb.AppendLine($"@{surfaceNumber} AutoLCD");
                     }
 
-                    sb.AppendLine($"Center <<< {this.Name} Airlock >>>");
-                    sb.AppendLine($"Oxygen {{{this.Vent.CustomName}}}");
-                    this.Doors.ForEach(d =>
+                    sb.AppendLine($"Center <<< {Name} Airlock >>>");
+                    sb.AppendLine($"Oxygen {{{Vent.CustomName}}}");
+                    Doors.ForEach(d =>
                     {
                         sb.AppendLine($"Working {{{d.CustomName}}}");
                     });
@@ -135,6 +154,11 @@ namespace IngameScript
                         textSurface.TextPadding = 2f;
                     }
                 }
+            }
+
+            public bool IsInnerDoor(IMyDoor door)
+            {
+                return door.CustomName.Contains("Inner");
             }
 
             public void TogglePressure(bool pressurize)
