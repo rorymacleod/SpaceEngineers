@@ -25,7 +25,9 @@ namespace IngameScript
         public class LcdManager
         {
             private readonly MyGridProgram Grid;
-            public IList<IMyTextSurface> Surfaces = new List<IMyTextSurface>();
+            public List<IMyTextSurface> Surfaces = new List<IMyTextSurface>();
+            public List<string> Lines = new List<string>();
+            public string Title = string.Empty;
 
             public LcdManager(MyGridProgram grid, IMyTextSurfaceProvider provider, int surface)
             {
@@ -43,7 +45,7 @@ namespace IngameScript
 
             public void AddTextSurfaces(string name)
             {
-                var blocks = Grid.GetBlocks<IMyTerminalBlock>(name);
+                var blocks = Grid.FindBlocks<IMyTerminalBlock>(name);
                 foreach (var block in blocks)
                 {
                     if (block is IMyTextSurface)
@@ -55,6 +57,8 @@ namespace IngameScript
 
             public void Clear()
             {
+                Lines.Clear();
+                Title = string.Empty;
                 foreach (var s in Surfaces)
                 {
                     s.WriteText(string.Empty);
@@ -64,17 +68,55 @@ namespace IngameScript
             public void WriteTitle(string text)
             {
                 Clear();
-                Write(text);
-                Write("=====");
+                Title = text;
+                Surfaces.ForEach(s => UpdateSurface(s));
+            }
+
+            public string[] ReadLines()
+            {
+                var buffer = new StringBuilder();
+                Surfaces[0].ReadText(buffer);
+                var lines = buffer.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                return lines;
+            }
+
+            public void UpdateLine(string text)
+            {
+                Lines[Lines.Count - 1] = GetTimestamp() + text;
+                Surfaces.ForEach(s => UpdateSurface(s));
             }
 
             public void Write(string text)
             {
+                Lines.Add(GetTimestamp() + text);
+
                 foreach (var s in Surfaces)
                 {
-                    s.WriteText(text, true);
+                    s.WriteText(Lines[Lines.Count - 1], true);
                     s.WriteText(Environment.NewLine, true);
                 }
+            }
+
+            private string GetTimestamp()
+            {
+                return DateTime.Now.ToString("mm:ss ");
+            }
+
+            private void UpdateSurface(IMyTextSurface surface)
+            {
+                var sb = new StringBuilder();
+                if (!string.IsNullOrEmpty(Title))
+                {
+                    sb.AppendLine(Title);
+                    
+                    var titleSize = surface.MeasureStringInPixels(sb, surface.Font, surface.FontSize);
+                    var charSize = surface.MeasureStringInPixels(new StringBuilder("="), surface.Font, surface.FontSize);
+                    string chars = new string('=', (int)Math.Ceiling(titleSize.X / charSize.X));
+                    sb.AppendLine(chars);
+                }
+
+                Lines.ForEach(l => sb.AppendLine(l));
+                surface.WriteText(sb);
             }
         }
     }
