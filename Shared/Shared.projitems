@@ -17,5 +17,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)LcdManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GridExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Program.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SafeZone.cs" />
   </ItemGroup>
 </Project>
