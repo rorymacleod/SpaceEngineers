@@ -27,13 +27,27 @@ namespace IngameScript
             }
         }
 
+        public static MyIni ReadConfiguration(string customData)
+        {
+            MyIni configuration = new MyIni();
+            MyIniParseResult config;
+            if (!configuration.TryParse(customData, out config))
+            {
+                throw new Exception(config.ToString());
+            }
+
+            return config.IsDefined ? configuration : null;
+        }
+
         private Dictionary<string, Func<IEnumerator<UpdateFrequency>>> Commands { get; set; } =
             new Dictionary<string, Func<IEnumerator<UpdateFrequency>>>();
         private string AutoRunCommand = null;
-        private readonly MyIni Config = new MyIni();
+        private MyIni Config;
         private bool Initialized = false;
         private IEnumerator<UpdateFrequency> Operation;
         private LcdManager Output;
+        private string Command;
+        private List<string> Arguments = new List<string>();
 
         private IEnumerable<UpdateFrequency> Enumerate(IEnumerator<UpdateFrequency> source)
         {
@@ -50,7 +64,7 @@ namespace IngameScript
             Echo = this.InitDebug();
             Output = new LcdManager(this, Me, 0);
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
-            ReadConfiguration(Me.CustomData, Config);
+            Config = ReadConfiguration(Me.CustomData);
             yield return Next();
 
             if (Commands.ContainsKey("initialize"))
@@ -64,13 +78,56 @@ namespace IngameScript
             Initialized = true;
         }
 
-        private void ReadConfiguration(string customData, MyIni configuration)
+        private void ParseArguments(string input)
         {
-            MyIniParseResult config;
-            if (!configuration.TryParse(customData, out config))
+            var tokens = new List<string>();
+            int i = 0, iStart = 0;
+            bool inToken = false, inString = false;
+            while (i < input.Length)
             {
-                throw new Exception(config.ToString());
+                if (inToken)
+                {
+                    if (char.IsWhiteSpace(input[i]))
+                    {
+                        inToken = false;
+                        Echo($"Token: {iStart}, {i - iStart}");
+                        tokens.Add(input.Substring(iStart, i - iStart));
+                    }
+                } 
+                else if (inString)
+                {
+                    if (input[i] == '"' && i > 0 && input[i] != '\\')
+                    {
+                        inString = false;
+                        Echo($"Token: {iStart + 1}, {i - iStart - 1}");
+                        tokens.Add(input.Substring(iStart + 1, i - iStart - 1).Replace("\\\"", "\""));
+                    }
+                }
+                else if (!char.IsWhiteSpace(input[i]))
+                {
+                    inString = input[i] == '"';
+                    inToken = !inString;
+                    iStart = i;
+                }
+
+                i++;
             }
+
+            iStart = input[iStart] == '"' ? iStart + 1 : iStart;
+            if (i > iStart && iStart <= input.Length)
+            {
+                Echo($"Token: {iStart}");
+                tokens.Add(input.Substring(iStart));
+            }
+
+            if (tokens.Count > 0)
+            {
+                Command = tokens[0].ToLower();
+                Arguments = tokens.Skip(1).ToList();
+            }
+
+            Echo("Command: " + Command);
+            Arguments.ForEach(a => Echo("Arg: " + a));
         }
 
         private void RunCommand(string command)
@@ -94,7 +151,8 @@ namespace IngameScript
             {
                 if (Initialized && this.IsCommand(updateSource))
                 {
-                    RunCommand(argument.ToLower());
+                    ParseArguments(argument);
+                    RunCommand(Command);
                 }
                 else if (Initialized && Operation == null && AutoRunCommand != null)
                 {
