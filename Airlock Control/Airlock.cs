@@ -44,7 +44,7 @@ namespace IngameScript
                 Doors = Grid.GetBlocks<IMyDoor>(prefix + " Airlock Inner Door");
                 Doors.AddRange(Grid.GetBlocks<IMyDoor>(prefix + " Airlock Outer Door"));
                 Vent = Grid.GetBlock<IMyAirVent>(prefix + " Airlock Vent");
-                Buttons = Grid.FindBlocks<IMyButtonPanel>(prefix);
+                Buttons = Grid.FindBlocks<IMyButtonPanel>(prefix + " Airlock");
                 Lights = new List<IMyLightingBlock>();
                 Grid.GridTerminalSystem.GetBlocksOfType(Lights, b => b.CustomName.StartsWith(prefix + " Airlock Light"));
                 Name = prefix.IndexOf(" ") == 2 ? prefix.Substring(3) : prefix;
