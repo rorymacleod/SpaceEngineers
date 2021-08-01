@@ -10,6 +10,9 @@ namespace IngameScript
 {
     partial class Program
     {
+        private static readonly char[] ProgressChars = new char[] { '|', '/', '-', '\\' };
+        private static int Progress = 0;
+
         public static UpdateFrequency Next() => UpdateFrequency.Update1;
         public static UpdateFrequency Once() => UpdateFrequency.Once;
         public static UpdateFrequency Update10() => UpdateFrequency.Update10;
@@ -48,6 +51,7 @@ namespace IngameScript
         private LcdManager Output;
         private string Command;
         private List<string> Arguments = new List<string>();
+        private Action<string> Debug;
 
         private IEnumerable<UpdateFrequency> Enumerate(IEnumerator<UpdateFrequency> source)
         {
@@ -61,6 +65,7 @@ namespace IngameScript
         {
             if (Initialized) yield break;
 
+            Debug = this.Echo;
             Echo = this.InitDebug();
             Output = new LcdManager(this, Me, 0);
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
@@ -164,6 +169,14 @@ namespace IngameScript
                 }
 
                 Operation = this.RunOperation(Operation);
+
+                if (Initialized && Operation == null && AutoRunCommand != null)
+                {
+                    Runtime.UpdateFrequency = UpdateFrequency.Once;
+                }
+
+                Debug(ProgressChars[Progress].ToString());
+                Progress = Progress == ProgressChars.Length - 1 ? 0 : Progress + 1;
             }
             catch (Exception ex)
             {

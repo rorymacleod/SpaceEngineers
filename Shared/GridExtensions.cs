@@ -172,7 +172,8 @@ namespace IngameScript
         public static bool IsCommand(this MyGridProgram _, UpdateType updateSource)
             => (updateSource & (UpdateType.Trigger | UpdateType.Terminal | UpdateType.Script)) != 0;
 
-        public static IEnumerator<UpdateFrequency> RunOperation(this MyGridProgram grid, IEnumerator<UpdateFrequency> operation)
+        public static IEnumerator<UpdateFrequency> RunOperation(this MyGridProgram grid, 
+            IEnumerator<UpdateFrequency> operation)
         {
             if (operation != null)
             {

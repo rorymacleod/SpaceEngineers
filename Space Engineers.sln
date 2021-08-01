@@ -19,11 +19,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mining Rig", "Mining Rig\Mi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Threat Detection", "Threat Detection\Threat Detection.csproj", "{57AA2389-E10F-4B23-BFAD-56B71054D3B7}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Shared\Shared.projitems*{2a984b31-57a8-48c1-a5f3-7e9aea1da2bd}*SharedItemsImports = 4
 		Shared\Shared.projitems*{36e7cdd6-ba1e-4255-9c58-1af11538b628}*SharedItemsImports = 13
 		Shared\Shared.projitems*{46e879f9-f333-4955-9b38-46ffb863f0e4}*SharedItemsImports = 4
+		Shared\Shared.projitems*{57aa2389-e10f-4b23-bfad-56b71054d3b7}*SharedItemsImports = 4
 		Shared\Shared.projitems*{7aa36394-f172-483e-827b-23c35da16f13}*SharedItemsImports = 4
 		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
 		Shared\Shared.projitems*{b388808c-7e6a-48aa-9cd7-fd80f413aebe}*SharedItemsImports = 4
@@ -46,6 +49,8 @@ Global
 		{7AA36394-F172-483E-827B-23C35DA16F13}.Debug|x64.Build.0 = Debug|x64
 		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.ActiveCfg = Debug|x64
 		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.Build.0 = Debug|x64
+		{57AA2389-E10F-4B23-BFAD-56B71054D3B7}.Debug|x64.ActiveCfg = Debug|x64
+		{57AA2389-E10F-4B23-BFAD-56B71054D3B7}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

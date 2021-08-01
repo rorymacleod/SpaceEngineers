@@ -30,7 +30,7 @@ namespace IngameScript
 
             public SafeZone(string name, LcdManager output, MyGridProgram grid)
             {
-                Block = grid.GetBlock<IMySafeZoneBlock>(name);
+                Block = grid.GetBlocks<IMySafeZoneBlock>(name).First();
                 Grid = grid;
                 Output = output;
             }
