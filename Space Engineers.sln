@@ -30,6 +30,7 @@ Global
 		Shared\Shared.projitems*{7aa36394-f172-483e-827b-23c35da16f13}*SharedItemsImports = 4
 		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
 		Shared\Shared.projitems*{b388808c-7e6a-48aa-9cd7-fd80f413aebe}*SharedItemsImports = 4
+		Shared\Shared.projitems*{ce1af11a-1204-41ce-a072-26096c5ae632}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
