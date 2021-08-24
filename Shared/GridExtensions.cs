@@ -205,5 +205,20 @@ namespace IngameScript
             keyboard.TextPadding = 30f;
             keyboard.WriteText(title);
         }
+
+        public static string GetName(this IMyEntity entity)
+        {
+            if (entity is IMyTerminalBlock)
+            {
+                return ((IMyTerminalBlock)entity).CustomName;
+            }
+
+            if (entity is IMyCubeBlock)
+            {
+                return ((IMyCubeBlock)entity).DisplayNameText;
+            }
+
+            return entity.GetType().Name;
+        }
     }
 }
