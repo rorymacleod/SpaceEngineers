@@ -50,7 +50,7 @@ namespace IngameScript
         private IEnumerator<UpdateFrequency> Operation;
         private LcdManager Output;
         private string Command;
-        private List<string> Arguments = new List<string>();
+        private MyCommandLine CommandLine = new MyCommandLine();
         private Action<string> Debug;
 
         private IEnumerable<UpdateFrequency> Enumerate(IEnumerator<UpdateFrequency> source)
@@ -83,58 +83,6 @@ namespace IngameScript
             Initialized = true;
         }
 
-        private void ParseArguments(string input)
-        {
-            var tokens = new List<string>();
-            int i = 0, iStart = 0;
-            bool inToken = false, inString = false;
-            while (i < input.Length)
-            {
-                if (inToken)
-                {
-                    if (char.IsWhiteSpace(input[i]))
-                    {
-                        inToken = false;
-                        Echo($"Token: {iStart}, {i - iStart}");
-                        tokens.Add(input.Substring(iStart, i - iStart));
-                    }
-                } 
-                else if (inString)
-                {
-                    if (input[i] == '"' && i > 0 && input[i] != '\\')
-                    {
-                        inString = false;
-                        Echo($"Token: {iStart + 1}, {i - iStart - 1}");
-                        tokens.Add(input.Substring(iStart + 1, i - iStart - 1).Replace("\\\"", "\""));
-                    }
-                }
-                else if (!char.IsWhiteSpace(input[i]))
-                {
-                    inString = input[i] == '"';
-                    inToken = !inString;
-                    iStart = i;
-                }
-
-                i++;
-            }
-
-            iStart = input[iStart] == '"' ? iStart + 1 : iStart;
-            if (i > iStart && iStart <= input.Length)
-            {
-                Echo($"Token: {iStart}");
-                tokens.Add(input.Substring(iStart));
-            }
-
-            if (tokens.Count > 0)
-            {
-                Command = tokens[0].ToLower();
-                Arguments = tokens.Skip(1).ToList();
-            }
-
-            Echo("Command: " + Command);
-            Arguments.ForEach(a => Echo("Arg: " + a));
-        }
-
         private void RunCommand(string command)
         {
             Func<IEnumerator<UpdateFrequency>> handlerFactory;
@@ -156,8 +104,11 @@ namespace IngameScript
             {
                 if (Initialized && this.IsCommand(updateSource))
                 {
-                    ParseArguments(argument);
-                    RunCommand(Command);
+                    if (CommandLine.TryParse(argument))
+                    {
+                        Command = CommandLine.Argument(0);
+                        RunCommand(Command);
+                    }
                 }
                 else if (Initialized && Operation == null && AutoRunCommand != null)
                 {
