@@ -92,16 +92,16 @@ namespace IngameScript
             }
             else
             {
-                Output.Write("Usage: safe-zone \"Safe Zone Name\" [hi|lo]");
+                Output.Write("Usage: safe-zone \"Safe Zone Name\" (hi|lo)");
             }
         }
 
         public IEnumerator<UpdateFrequency> TransferCargo()
         {
             Output.WriteTitle("Tools: Transfer Cargo");
-            const string usage = "Usage: transfer [load|unload] ore/stone [component/steelplate] [...]";
+            const string usage = "Usage: transfer (load|unload) [ore/stone]*";
 
-            if (CommandLine.ArgumentCount < 3)
+            if (CommandLine.ArgumentCount < 2)
             {
                 Output.Write(usage);
                 yield break;
@@ -119,7 +119,7 @@ namespace IngameScript
                     break;
 
                 default:
-                    Output.Write($"Unknown argument \"{CommandLine.Argument(0)}\". Expected [load|unload].");
+                    Output.Write($"Unknown argument \"{CommandLine.Argument(0)}\". Expected (load|unload).");
                     Output.Write(usage);
                     yield break;
             }
@@ -144,9 +144,31 @@ namespace IngameScript
             }
             yield return Next();
 
-            for (int i = 2; i < CommandLine.ArgumentCount; i++)
+            List<ItemMatcher> itemMatchers;
+            if (CommandLine.ArgumentCount < 3)
             {
-                var itemType = MyItemType.Parse(CommandLine.Argument(i));
+                itemMatchers = new List<ItemMatcher> { ItemMatcher.MatchAll };
+            }
+            else
+            {
+                itemMatchers = new List<ItemMatcher>();
+                for (int i = 2; i < CommandLine.ArgumentCount; i++)
+                {
+                    itemMatchers.Add(new ItemMatcher(CommandLine.Argument(i)));
+                }
+            }
+            yield return Next();
+
+            var itemTypes = GetInventoryItemTypes(sourceInventories, itemMatchers);
+            if (itemTypes.Count == 0)
+            {
+                Output.Write("No matching items found in source inventories.");
+                yield break;
+            }
+            yield return Next();
+
+            foreach (var itemType in itemTypes)
+            {
                 TransferAllAvailable(itemType, sourceInventories, targetInventories);
 
                 if (targetInventories.Count == 0)
@@ -175,6 +197,23 @@ namespace IngameScript
                 .ToList();
 
             return this.GetInventories(targetBlocks);
+        }
+
+        private List<MyItemType> GetInventoryItemTypes(List<IMyInventory> sourceInventories,
+            List<ItemMatcher> itemMatchers)
+        {
+            var itemTypes = new HashSet<MyItemType>();
+            foreach (var source in sourceInventories)
+            {
+                var items = new List<MyInventoryItem>();
+                source.GetItems(items, i => itemMatchers.Any(m => m.IsMatch(i.Type)));
+                foreach (var item in items)
+                {
+                    itemTypes.Add(item.Type);
+                }
+            }
+
+            return itemTypes.ToList();
         }
 
         private void TransferAllAvailable(MyItemType itemType, List<IMyInventory> sourceInventories,
