@@ -43,6 +43,7 @@ namespace IngameScript
         private IEnumerator<UpdateFrequency> Initialize()
         {
             Me.SetScriptTitle("Threat");
+            Output.AddTextSurfaces("Threat");
             Output.WriteTitle("Threat Detection");
 
             Turrets = this.GetBlocksOfType<IMyLargeGatlingTurret>(t => t.Enabled);
@@ -54,7 +55,7 @@ namespace IngameScript
             yield return Next();
 
             StandbyTimer = this.GetBlock<IMyTimerBlock>(Config.GetRequiredString(ConfigSectionName, "Standby timer"));
-            Output.Write($"On standby, trigger {StandbyTimer.CustomName}.");
+            Output.Write($"On standby, start {StandbyTimer.CustomName}.");
             yield return Next();
         }
 
@@ -70,17 +71,26 @@ namespace IngameScript
                 var shooting = Turrets.FirstOrDefault(t => t.IsWorking && t.Enabled && t.HasTarget);
                 if (shooting != null && !IsAlerting)
                 {
-                    cooldownTime = DateTime.Now.AddSeconds(10);
-                    IsAlerting = true;
-                    Output.WriteTitle("Threat: Detect");
                     var target = shooting.GetTargetedEntity();
+                    var speed = target.Velocity.Length();
+                    if (target.Relationship == MyRelationsBetweenPlayerAndBlock.Enemies)
+                    cooldownTime = DateTime.Now.AddSeconds(10);
+                    Output.WriteTitle("Threat: Detect");
                     Output.Write($"ALERT: {shooting.CustomName}");
                     Output.Write("    is targeting");
                     Output.Write($"    {target.Name}.");
-                    AlertTimer.StartCountdown();
-                    Output.Write($"Started {AlertTimer.CustomName}");
+                    Output.Write($"    ({target.Relationship}, {speed:f2} m/s)");
+                    if (target.Relationship == MyRelationsBetweenPlayerAndBlock.Enemies && speed > 0)
+                    {
+                        IsAlerting = true;
+                        AlertTimer.Trigger();
+                        StandbyTimer.StopCountdown();
+                        Output.Write($"Triggered {AlertTimer.CustomName}");
+                        yield break;
+                    }
                 }
-                else if (IsAlerting && DateTime.Now > cooldownTime)
+
+                if (IsAlerting && DateTime.Now > cooldownTime)
                 {
                     IsAlerting = false;
                     cooldownTime = DateTime.MinValue;
