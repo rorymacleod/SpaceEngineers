@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -46,7 +46,7 @@ namespace IngameScript
             string name = Config.Get("Tools", "Grid name").ToString(null);
             if (string.IsNullOrWhiteSpace(name))
             {
-                Output.Write("Custom data value \"Grid Name\" is required.");
+                Output.Write("Custom data value \"Grid name\" is required.");
                 yield break;
             }
 

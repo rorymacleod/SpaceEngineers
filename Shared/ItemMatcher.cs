@@ -1,4 +1,4 @@
-﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -38,7 +38,7 @@ namespace IngameScript
                 int sep = itemSpec.IndexOf('/');
                 if (sep > 0 && sep <= itemSpec.Length - 2)
                 {
-                    string type = itemSpec.Substring(0, sep).ToLower();
+                    string type = "MyObjectBuilder_" + itemSpec.Substring(0, sep).ToLower();
                     string subtype = itemSpec.Substring(sep + 1).ToLower();
                     IsMatch = i => i.TypeId.Equals(type, StringComparison.OrdinalIgnoreCase) &&
                         i.SubtypeId.Equals(subtype, StringComparison.OrdinalIgnoreCase);
