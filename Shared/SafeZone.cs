@@ -87,7 +87,7 @@ namespace IngameScript
                 }
 
                 string section = $"Safe Zone (Hi)";
-                return SetFromConfig(config, section, true);
+                return SetFromConfig(config, section);
             }
 
             public IEnumerable<UpdateFrequency> SetLo()
@@ -99,15 +99,18 @@ namespace IngameScript
                 }
 
                 string section = $"Safe Zone (Lo)";
-                return SetFromConfig(config, section, false);
+                return SetFromConfig(config, section);
             }
 
-            private IEnumerable<UpdateFrequency> SetFromConfig(MyIni config, string section, bool enableReactor)
+            private IEnumerable<UpdateFrequency> SetFromConfig(MyIni config, string section)
             {
+                ZoneEnabled = true;
+                yield return Next();
+                
                 bool spherical = config.Get(section, "Spherical").ToBoolean(true);
                 if (spherical)
                 {
-                IsSpherical = true;
+                    IsSpherical = true;
                     Size = config.Get(section, "Size").ToSingle();
                     yield return Next();
 
@@ -124,16 +127,11 @@ namespace IngameScript
                     Output.Write($"{Block.CustomName} set to {SizeX}x{SizeY}x{SizeZ}m");
                 }
 
-                string reactorName = config.Get(section, "Reactor").ToString();
-                if (!string.IsNullOrEmpty(reactorName))
+                if (config.Get(section, "Enable").ToBoolean(true) == false)
                 {
-                    var reactor = Grid.GetBlock<IMyReactor>(reactorName);
-                    reactor.Enabled = enableReactor;
-                    Output.Write($"{reactor.CustomName} {(enableReactor ? "enabled" : "disabled")}.");
-                    yield return Next();
+                    Output.Write($"{Block.CustomName} is disabled.");
+                    ZoneEnabled = false;
                 }
-
-                ZoneEnabled = true;
             }
         }
     }
