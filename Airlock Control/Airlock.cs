@@ -34,8 +34,10 @@ namespace IngameScript
             public readonly List<IMyDoor> Doors;
             public readonly IMyAirVent Vent;
             public readonly IMyAirVent InnerVent;
+            public readonly IMyAirVent OuterVent;
             public readonly List<IMyButtonPanel> Buttons;
             public readonly List<IMyLightingBlock> Lights;
+            public readonly IMySensorBlock Sensor;
 
             public Airlock(MyGridProgram grid, string prefix, MyIni config)
             {
@@ -45,10 +47,23 @@ namespace IngameScript
                 Doors.AddRange(Grid.GetBlocks<IMyDoor>(prefix + " Airlock Outer Door"));
                 Vent = Grid.GetBlock<IMyAirVent>(prefix + " Airlock Vent");
                 Buttons = Grid.FindBlocks<IMyButtonPanel>(prefix + " Airlock");
+                Sensor = Grid.FindBlock<IMySensorBlock>(prefix + " Airlock Sensor");
                 Lights = new List<IMyLightingBlock>();
                 Grid.GridTerminalSystem.GetBlocksOfType(Lights, b => b.CustomName.StartsWith(prefix + " Airlock Light"));
                 Name = prefix.IndexOf(" ") == 2 ? prefix.Substring(3) : prefix;
                 LcdTag = Config.Get(ConfigSectionName, "LCD tag").ToString("[LCD]");
+
+                string innerVentName = Config.Get(ConfigSectionName, "Inner vent").ToString();
+                if (!string.IsNullOrWhiteSpace(innerVentName))
+                {
+                    InnerVent = Grid.GetBlock<IMyAirVent>(innerVentName);
+                }
+
+                string outerVentName = Config.Get(ConfigSectionName, "Outer vent").ToString();
+                if (!string.IsNullOrWhiteSpace(outerVentName))
+                {
+                    OuterVent = Grid.GetBlock<IMyAirVent>(outerVentName);
+                }
 
                 Configure();
             }
@@ -61,24 +76,35 @@ namespace IngameScript
                 set
                 {
                     Vent.Enabled = value;
-                    Doors.ForEach(d => d.Enabled = value);
+                    Doors.ForEach(d =>
+                    {
+                        if (value)
+                        {
+                            d.Enabled = true;
+                            d.CloseDoor();
+                        }
+                        else
+                        {
+                            d.OpenDoor();
+                        }
+                    });
                     Buttons.ForEach(d => {
                         if (d is IMyFunctionalBlock) {
                             ((IMyFunctionalBlock)d).Enabled = value;
                         }
                     });
                     Lights.ForEach(d => d.Enabled = value);
+                    Sensor.Enabled = value;
                 }
             }
             public string Name { get; set; }
             public bool IsClosed => !Enabled || (Doors.All(d => d.Status == DoorStatus.Closed));
-            public bool IsAtPressure => !Enabled || (
-                Vent.Status == VentStatus.Depressurized || Vent.Status == VentStatus.Pressurized ||
-                (Vent.Depressurize && Vent.GetOxygenLevel() < 0.01f));
+            public bool IsAtPressure => !Enabled || 
+                (Vent.Depressurize && Vent.GetOxygenLevel() < 0.1f) ||
+                (!Vent.Depressurize && Vent.Status == VentStatus.Pressurized);
             public bool IsAtInnerPressure => IsAtPressure &&
                 (InnerVent == null || InnerVent.Status == Vent.Status);
             public bool IsPressurizing => Vent.Enabled && Vent.Status == VentStatus.Pressurizing;
-            public bool Depressurize => Vent.Enabled && Vent.Depressurize;
             public IMyDoor EntryDoor => Doors.Count == 2
                 ? Doors.FirstOrDefault(d => d.Status == DoorStatus.Open || d.Status == DoorStatus.Opening)
                 : null;
@@ -90,8 +116,6 @@ namespace IngameScript
 
             private void Configure()
             {
-                string innerVentName = Config.Get(ConfigSectionName, "Inner vent").ToString();
-                string outerVentName = Config.Get(ConfigSectionName, "Outer vent").ToString();
                 foreach (var button in Buttons)
                 {
 
@@ -119,15 +143,15 @@ namespace IngameScript
                     sb.AppendLine("Echo");
 
                     bool workingAdded = false;
-                    if (!string.IsNullOrWhiteSpace(innerVentName) && !button.CustomName.Contains("Inner"))
+                    if (InnerVent != null && !button.CustomName.Contains("Inner"))
                     {
-                        sb.AppendLine($"Oxygen {{{ innerVentName }}}");
+                        sb.AppendLine($"Oxygen {{{ InnerVent.CustomName }}}");
                         workingAdded = true;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(outerVentName) && !button.CustomName.Contains("Outer"))
+                    if (OuterVent != null && !button.CustomName.Contains("Outer"))
                     {
-                        sb.AppendLine($"Oxygen {{{ outerVentName }}}");
+                        sb.AppendLine($"Oxygen {{{ OuterVent.CustomName }}}");
                         workingAdded = true;
                     }
 

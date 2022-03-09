@@ -16,6 +16,7 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRage;
 using VRageMath;
+using System.Security.Policy;
 
 namespace IngameScript
 {
@@ -78,88 +79,176 @@ namespace IngameScript
         private IEnumerator<UpdateFrequency> CycleAirlocks()
         {
             Output.WriteTitle("Airlock Control: Cycle Airlocks");
-            var entryDoors = Airlocks.Select(a => a.EntryDoor).Where(d => d != null).ToList();
-            bool? entering = null;
-            if (entryDoors.Count > 0)
+            if (!Airlocks.Any(a => a.Enabled))
             {
-                entering = entryDoors.Any(d => d.CustomName.Contains("Outer"));
-                Output.Write($"{(entering != false ? "Entering" : "Exiting")} through:");
-                foreach (var door in entryDoors)
-                {
-                    Output.Write($"- {door.CustomName}");
-                }
+                Output.Write("All airlocks are disabled.");
+                yield break;
             }
-            else
-            {
-                Output.Write("Entry door not detected.");
-            }
+
+            var entryDoor = FindEntryDoor();
+            Output.Write(entryDoor == null
+                ? "Entry door not detected."
+                : $"Entered {entryDoor.CustomName}");
+
+            var activeAirlock = GetAirlockByDoor(entryDoor);
+            var exitDoor = GetExitDoor(activeAirlock, entryDoor);
+            bool entering = IsEntering(entryDoor);
+            var exitZone = GetExitZone(activeAirlock, entering);
             yield return Next();
 
             Output.Write("Closing airlock doors...");
-            foreach (var airlock in Airlocks)
-            {
-                airlock.Close();
-            }
+            CloseAirlocks(Airlocks);
             yield return Next();
 
-            while (Airlocks.Any(a => !a.IsClosed))
+            while (exitZone.Airlocks.Any(a => !a.IsClosed))
             {
-                yield return UpdateFrequency.Update10;
+                yield return Update10();
             }
-
             Output.Write("Airlock doors closed.");
-            if (Airlocks.Any(a => a.Enabled))
-            {
-                Output.Write(entering == false || Airlocks.FirstOrDefault(a => a.Enabled)?.IsPressurizing == true ?
-                    "Depressurizing..." :
-                    "Pressurizing...");
-            }
-            else
-            {
-                Output.Write("All airlock vents are disabled.");
-            }
-            yield return Next();
 
-            var pressurize = entering == true || Airlocks.First().Depressurize;
-            foreach (var airlock in Airlocks)
+            yield return Update10();
+            Output.Write($"{(exitZone.IsPressurized ? "Pressurizing" : "Depressurizing")} " +
+                $"{exitZone.Airlocks.Count} airlocks ");
+            Output.Write($"  to {exitZone.Name} pressure...");
+            SetAirlocksToZonePressure(exitZone);
+            int i = 0;
+            while (!activeAirlock.IsAtPressure || i++ > 50)
             {
-                airlock.TogglePressure(pressurize);
+                yield return Update10();
             }
+            yield return Update100();
 
-            yield return UpdateFrequency.Update100;
-            while (Airlocks.Any(a => a.Enabled && !a.IsAtPressure))
-            {
-                yield return UpdateFrequency.Update10;
-            }
+            OpenDoor(exitDoor);
 
-            foreach (var airlock in Airlocks)
-            {
-                if (entryDoors.Any(d => airlock.Doors.Contains(d)))
-                {
-                    var oppositeDoor = airlock.Doors.First(d => !entryDoors.Contains(d));
-                    if (airlock.IsInnerDoor(oppositeDoor) && !airlock.IsAtInnerPressure)
-                    {
-                        Output.Write($"Unable to open {oppositeDoor.CustomName}:");
-                        Output.Write("- Airlock is not at inner pressure.");
-                    }
-                    else
-                    {
-                        oppositeDoor.OpenDoor();
-                        Output.Write($"Open {oppositeDoor.CustomName}...");
-                    }
-                }
-            }
-
-            yield return Next();
             Output.Write("Done.");
         }
 
+        private IMyDoor FindEntryDoor()
+        {
+            var entryDoor = Airlocks.Select(a => a.EntryDoor).Where(d => d != null).FirstOrDefault();
+            return entryDoor;
+        }
+
+        private bool IsEntering(IMyDoor entryDoor)
+        {
+            if (entryDoor == null)
+            {
+                bool engineerIsInside = Airlocks.Any(a => a.IsPressurizing);
+                return !engineerIsInside;
+            }
+
+            return entryDoor.CustomName.Contains("Outer");
+        }
+
+        private IMyDoor GetExitDoor(Airlock airlock, IMyDoor entryDoor)
+        {
+            if (airlock == null)
+            {
+                return null;
+            }
+
+            var exitDoor = airlock.Doors.FirstOrDefault(d => d != entryDoor);
+            return exitDoor;
+        }
+
+        private AirZone GetExitZone(Airlock airlock, bool entering)
+        {
+            AirZone zone;
+            if (airlock != null)
+            {
+                var zoneVent = entering ? airlock.InnerVent : airlock.OuterVent;
+                var group = Airlocks.Where(a => entering ? a.InnerVent == zoneVent : a.OuterVent == zoneVent);
+                zone = new AirZone
+                {
+                    Airlocks = group.ToList(),
+                    Vent = zoneVent,
+                    Name = GetZoneName(zoneVent, entering),
+                };
+            }
+            else
+            {
+                zone = new AirZone
+                {
+                    Airlocks = Airlocks,
+                    DefaultPressure = entering,
+                    Name = GetZoneName(null, entering),
+                };
+            }
+
+            return zone;
+        }
+
+
+        private string GetZoneName(IMyAirVent vent, bool entering)
+        {
+            if (vent == null)
+            {
+                return entering ? "interior" : "exterior";
+            }
+
+            string name = vent.CustomName;
+            if (name.Length > 3 && name[2] == ' ')
+            {
+                name = name.Substring(3);
+            }
+
+            int ix = name.IndexOf(" Air Vent");
+            ix = ix > -1 ? ix : name.IndexOf(" Vent");
+            if (ix > -1)
+            {
+                name = name.Substring(0, ix);
+            }
+
+            return name;
+        }
+
+        private Airlock GetAirlockByDoor(IMyDoor door)
+        {
+            if (door == null)
+            {
+                return null;
+            }
+
+            var airlock = Airlocks.FirstOrDefault(a => a.Doors.Contains(door));
+            return airlock;
+        }
+
+        private Airlock GetAirlockByName(string name)
+        {
+            var airlock = Airlocks.FirstOrDefault(a =>
+                string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase));
+            return airlock;
+        }
+
+        private void CloseAirlocks(IEnumerable<Airlock> airlocks)
+        {
+            foreach (var airlock in airlocks)
+            {
+                airlock.Close();
+            }
+        }
+
+        private void SetAirlocksToZonePressure(AirZone zone)
+        {
+            bool pressurize = zone.IsPressurized;
+            foreach (var airlock in zone.Airlocks)
+            {
+                airlock.TogglePressure(pressurize);
+            }
+        }
+
+        private void OpenDoor(IMyDoor door)
+        {
+            if (door != null)
+            {
+                door.OpenDoor();
+            }
+        }
 
         private IEnumerator<UpdateFrequency> TurnOn()
         {
             Output.WriteTitle("Airlock Control: Turn On");
-            Airlocks.ForEach(a => a.Enabled = true);
-            Output.Write("All airlocks enabled.");
+            SetEnabled(true);
             yield break;
         }
 
@@ -167,14 +256,52 @@ namespace IngameScript
         private IEnumerator<UpdateFrequency> TurnOff()
         {
             Output.WriteTitle("Airlock Control: Turn Off");
-            Airlocks.ForEach(a => a.Enabled = false);
-            Output.Write("All airlocks disabled.");
+            SetEnabled(false);
             yield break;
         }
 
         private IEnumerator<UpdateFrequency> TurnOnOff()
         {
-            return Airlocks.Any(a => a.Enabled) ? TurnOff() : TurnOn();
+            SetEnabled(null);
+            yield break;
+        }
+
+        private void SetEnabled(bool? state)
+        {
+            if (CommandLine.ArgumentCount > 1)
+            {
+                var airlock = GetAirlockByName(CommandLine.Argument(1));
+                if (airlock == null)
+                {
+                    Output.Write($"Airlock \"{CommandLine.Argument(1)}\" not found.");
+                }
+                else
+                {
+                    SetEnabled(airlock, state ?? !airlock.Enabled);
+                }
+            }
+            else
+            {
+                foreach (var airlock in Airlocks)
+                {
+                    SetEnabled(airlock, state ?? Airlocks.Any(a => !a.Enabled));
+                }
+            }
+        }
+
+        private void SetEnabled(Airlock airlock, bool state)
+        {
+            airlock.Enabled = state;
+            if (state)
+            {
+                airlock.Enabled = true;
+                Output.Write($"{airlock.Name} airlock enabled.");
+            }
+            else
+            {
+                airlock.Enabled = false;
+                Output.Write($"{airlock.Name} airlock disabled.");
+            }
         }
     }
 }
