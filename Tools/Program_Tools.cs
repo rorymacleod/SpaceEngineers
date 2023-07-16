@@ -26,7 +26,6 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Once;
             Commands.Add("initialize", Initialize);
-            Commands.Add("rename-grid", RenameGrid);
             Commands.Add("safe-zone", SetSafeZone);
             Commands.Add("transfer", TransferCargo);
         }
@@ -37,30 +36,6 @@ namespace IngameScript
             Output.AddTextSurfaces("Tools");
 
             yield return Next();
-        }
-
-        public IEnumerator<UpdateFrequency> RenameGrid()
-        {
-            Output.WriteTitle("Tools: Rename Grid");
-            yield return Update100();
-            string name = Config.Get("Tools", "Grid name").ToString(null);
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                Output.Write("Custom data value \"Grid name\" is required.");
-                yield break;
-            }
-
-            if (Me.CubeGrid.CustomName.StartsWith("Small Grid") ||
-                Me.CubeGrid.CustomName.StartsWith("Large Grid") ||
-                Me.CubeGrid.CustomName.StartsWith("Static Grid"))
-            {
-                Me.CubeGrid.CustomName = name;
-                Output.Write($"Grid renamed to \"{name}\".");
-            }
-            else
-            {
-                Output.Write($"Grid already has a name of \"{Me.CubeGrid.CustomName}\".");
-            }
         }
 
         public IEnumerator<UpdateFrequency> SetSafeZone()

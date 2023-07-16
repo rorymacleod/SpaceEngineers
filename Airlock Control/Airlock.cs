@@ -97,6 +97,7 @@ namespace IngameScript
                     Sensor.Enabled = value;
                 }
             }
+
             public string Name { get; set; }
             public bool IsClosed => !Enabled || (Doors.All(d => d.Status == DoorStatus.Closed));
             public bool IsAtPressure => !Enabled || 
@@ -118,7 +119,6 @@ namespace IngameScript
             {
                 foreach (var button in Buttons)
                 {
-
                     var sb = new StringBuilder();
                     var provider = (button as IMyTextSurfaceProvider);
                     int surfaceNumber = 0;

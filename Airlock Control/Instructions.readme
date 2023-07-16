@@ -1,0 +1,17 @@
+﻿Airlock Control
+===============
+
+Configuration:
+	[Airlock]
+	Ignore=[boolean]
+	Inner vent=[block name]
+	Outer vent=[block name]
+	Airlock button=[surface number]
+
+Commands:
+	initialize
+	close
+	cycle
+	on
+	off
+	onoff

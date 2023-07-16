@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30406.217
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hangar Control", "Scripts\Hangar Control.csproj", "{CE1AF11A-1204-41CE-A072-26096C5AE632}"
 EndProject
@@ -21,17 +21,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Threat Detection", "Threat Detection\Threat Detection.csproj", "{57AA2389-E10F-4B23-BFAD-56B71054D3B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IngameScript1", "IngameScript1\IngameScript1.csproj", "{06AFDA87-D4AD-4C5F-9ABE-F9170E3071C6}"
+EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Shared\Shared.projitems*{2a984b31-57a8-48c1-a5f3-7e9aea1da2bd}*SharedItemsImports = 4
-		Shared\Shared.projitems*{36e7cdd6-ba1e-4255-9c58-1af11538b628}*SharedItemsImports = 13
-		Shared\Shared.projitems*{46e879f9-f333-4955-9b38-46ffb863f0e4}*SharedItemsImports = 4
-		Shared\Shared.projitems*{57aa2389-e10f-4b23-bfad-56b71054d3b7}*SharedItemsImports = 4
-		Shared\Shared.projitems*{7aa36394-f172-483e-827b-23c35da16f13}*SharedItemsImports = 4
-		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
-		Shared\Shared.projitems*{b388808c-7e6a-48aa-9cd7-fd80f413aebe}*SharedItemsImports = 4
-		Shared\Shared.projitems*{ce1af11a-1204-41ce-a072-26096c5ae632}*SharedItemsImports = 4
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 	EndGlobalSection
@@ -52,11 +44,23 @@ Global
 		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.Build.0 = Debug|x64
 		{57AA2389-E10F-4B23-BFAD-56B71054D3B7}.Debug|x64.ActiveCfg = Debug|x64
 		{57AA2389-E10F-4B23-BFAD-56B71054D3B7}.Debug|x64.Build.0 = Debug|x64
+		{06AFDA87-D4AD-4C5F-9ABE-F9170E3071C6}.Debug|x64.ActiveCfg = Debug|x64
+		{06AFDA87-D4AD-4C5F-9ABE-F9170E3071C6}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4A8EF80-8493-43F4-956F-3AEBFD781723}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Shared\Shared.projitems*{2a984b31-57a8-48c1-a5f3-7e9aea1da2bd}*SharedItemsImports = 4
+		Shared\Shared.projitems*{36e7cdd6-ba1e-4255-9c58-1af11538b628}*SharedItemsImports = 13
+		Shared\Shared.projitems*{46e879f9-f333-4955-9b38-46ffb863f0e4}*SharedItemsImports = 4
+		Shared\Shared.projitems*{57aa2389-e10f-4b23-bfad-56b71054d3b7}*SharedItemsImports = 4
+		Shared\Shared.projitems*{7aa36394-f172-483e-827b-23c35da16f13}*SharedItemsImports = 4
+		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
+		Shared\Shared.projitems*{b388808c-7e6a-48aa-9cd7-fd80f413aebe}*SharedItemsImports = 4
+		Shared\Shared.projitems*{ce1af11a-1204-41ce-a072-26096c5ae632}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

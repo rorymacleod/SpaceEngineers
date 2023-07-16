@@ -112,7 +112,7 @@ namespace IngameScript
             Output.Write($"  to {exitZone.Name} pressure...");
             SetAirlocksToZonePressure(exitZone);
             int i = 0;
-            while (!activeAirlock.IsAtPressure || i++ > 50)
+            while (!(activeAirlock ?? exitZone.Airlocks.First()).IsAtPressure || i++ > 50)
             {
                 yield return Update10();
             }
@@ -282,9 +282,10 @@ namespace IngameScript
             }
             else
             {
+                state = state ?? Airlocks.Any(a => !a.Enabled);
                 foreach (var airlock in Airlocks)
                 {
-                    SetEnabled(airlock, state ?? Airlocks.Any(a => !a.Enabled));
+                    SetEnabled(airlock, state.GetValueOrDefault());
                 }
             }
         }
