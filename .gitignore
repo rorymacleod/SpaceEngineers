@@ -339,3 +339,33 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 *_Backup_*
+
+IngameScripts/
+
+ProfileOptimization/
+
+Promo/
+
+Saves/
+
+ShaderCache2/
+
+Storage/
+
+WorkshopBrowser/
+
+ColdStart.txt
+
+mipMapTextureCache2.B5
+
+SpaceEngineers.cfg
+
+Blueprints/
+
+Mods/Extremely Scarce Resources/Data/PlanetDataFiles/
+
+Mods/Extremely Scarce Resources/Textures/
+
+Mods/Yet More Generated Ores/Data/PlanetDataFiles/
+
+Mods/Yet More Generated Ores/Textures/
