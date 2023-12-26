@@ -34,6 +34,7 @@ namespace IngameScript
         {
             Me.SetScriptTitle("Tools");
             Output.AddTextSurfaces("Tools");
+            Output.AddDebug(Echo);
 
             yield return Next();
         }

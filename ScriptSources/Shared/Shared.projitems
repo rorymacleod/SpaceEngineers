@@ -12,12 +12,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)ConfigException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ConfigExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DrillActuator.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DrillHead.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ItemMatcher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LcdManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GridExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Program.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SafeZone.cs" />
   </ItemGroup>
 </Project>
