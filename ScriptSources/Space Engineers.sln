@@ -9,19 +9,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Airlock Control", "Airlock 
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "Shared\Shared.shproj", "{36E7CDD6-BA1E-4255-9C58-1AF11538B628}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drill Control", "Drill Control\Drill Control.csproj", "{46E879F9-F333-4955-9B38-46FFB863F0E4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gun Battery Control", "Gun Battery Control\Gun Battery Control.csproj", "{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Container Control", "Container Control\Container Control.csproj", "{8FC94B76-7A90-4A85-8F07-0EE0704CB31D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mining Rig", "Mining Rig\Mining Rig.csproj", "{7AA36394-F172-483E-827B-23C35DA16F13}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Threat Detection", "Threat Detection\Threat Detection.csproj", "{57AA2389-E10F-4B23-BFAD-56B71054D3B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IngameScript1", "IngameScript1\IngameScript1.csproj", "{06AFDA87-D4AD-4C5F-9ABE-F9170E3071C6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inventory", "Inventory\Inventory.csproj", "{CCCF5407-71EC-4120-B5B2-9B18905AC3AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,20 +26,14 @@ Global
 		{CE1AF11A-1204-41CE-A072-26096C5AE632}.Debug|x64.Build.0 = Debug|x64
 		{2A984B31-57A8-48C1-A5F3-7E9AEA1DA2BD}.Debug|x64.ActiveCfg = Debug|x64
 		{2A984B31-57A8-48C1-A5F3-7E9AEA1DA2BD}.Debug|x64.Build.0 = Debug|x64
-		{46E879F9-F333-4955-9B38-46FFB863F0E4}.Debug|x64.ActiveCfg = Debug|x64
-		{46E879F9-F333-4955-9B38-46FFB863F0E4}.Debug|x64.Build.0 = Debug|x64
 		{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}.Debug|x64.ActiveCfg = Debug|x64
 		{885DF4F4-7BA6-4CB7-91B3-B04C875FFE1A}.Debug|x64.Build.0 = Debug|x64
-		{8FC94B76-7A90-4A85-8F07-0EE0704CB31D}.Debug|x64.ActiveCfg = Debug|x64
-		{8FC94B76-7A90-4A85-8F07-0EE0704CB31D}.Debug|x64.Build.0 = Debug|x64
-		{7AA36394-F172-483E-827B-23C35DA16F13}.Debug|x64.ActiveCfg = Debug|x64
-		{7AA36394-F172-483E-827B-23C35DA16F13}.Debug|x64.Build.0 = Debug|x64
 		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.ActiveCfg = Debug|x64
 		{B388808C-7E6A-48AA-9CD7-FD80F413AEBE}.Debug|x64.Build.0 = Debug|x64
 		{57AA2389-E10F-4B23-BFAD-56B71054D3B7}.Debug|x64.ActiveCfg = Debug|x64
 		{57AA2389-E10F-4B23-BFAD-56B71054D3B7}.Debug|x64.Build.0 = Debug|x64
-		{06AFDA87-D4AD-4C5F-9ABE-F9170E3071C6}.Debug|x64.ActiveCfg = Debug|x64
-		{06AFDA87-D4AD-4C5F-9ABE-F9170E3071C6}.Debug|x64.Build.0 = Debug|x64
+		{CCCF5407-71EC-4120-B5B2-9B18905AC3AD}.Debug|x64.ActiveCfg = Debug|x64
+		{CCCF5407-71EC-4120-B5B2-9B18905AC3AD}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -56,11 +44,7 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Shared\Shared.projitems*{2a984b31-57a8-48c1-a5f3-7e9aea1da2bd}*SharedItemsImports = 4
 		Shared\Shared.projitems*{36e7cdd6-ba1e-4255-9c58-1af11538b628}*SharedItemsImports = 13
-		Shared\Shared.projitems*{46e879f9-f333-4955-9b38-46ffb863f0e4}*SharedItemsImports = 4
-		Shared\Shared.projitems*{57aa2389-e10f-4b23-bfad-56b71054d3b7}*SharedItemsImports = 4
-		Shared\Shared.projitems*{7aa36394-f172-483e-827b-23c35da16f13}*SharedItemsImports = 4
-		Shared\Shared.projitems*{885df4f4-7ba6-4cb7-91b3-b04c875ffe1a}*SharedItemsImports = 4
 		Shared\Shared.projitems*{b388808c-7e6a-48aa-9cd7-fd80f413aebe}*SharedItemsImports = 4
-		Shared\Shared.projitems*{ce1af11a-1204-41ce-a072-26096c5ae632}*SharedItemsImports = 4
+		Shared\Shared.projitems*{cccf5407-71ec-4120-b5b2-9b18905ac3ad}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal
